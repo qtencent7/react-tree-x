@@ -1,0 +1,9 @@
+{
+  "name": "react-tree-x",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter ./packages/playground dev",
+    "build": "pnpm --filter ./packages/* build"
+  }
+}
