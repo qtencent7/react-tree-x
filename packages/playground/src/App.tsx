@@ -115,46 +115,99 @@ const App: React.FC = () => {
     setSearchTreeData(filteredData);
   };
 
-  // 示例：自定义顶部插槽
-  const customTopSlot = ({
-    value,
-    onChange,
-    onKeyDown
-  }: {
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  }) => (
-    <div className="custom-filter">
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-        placeholder="Search..."
-        className="custom-filter-input"
+  const handleDragMove = (dragId: string, dropId: string, position: 'before' | 'after') => {
+    setTreeData(prevData => {
+      // 找到被拖拽的节点
+      let dragNode: NodeProps | null = null;
+      
+      const findDragNode = (nodes: NodeProps[]): boolean => {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === dragId) {
+            dragNode = nodes[i];
+            return true;
+          }
+          if (nodes[i].children.length > 0 && findDragNode(nodes[i].children)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      findDragNode(prevData);
+      if (!dragNode) return prevData;
+      
+      // 从原位置删除节点
+      const removeNode = (nodes: NodeProps[]): NodeProps[] => {
+        return nodes.filter(node => {
+          if (node.id === dragId) {
+            return false;
+          }
+          if (node.children.length > 0) {
+            node.children = removeNode(node.children);
+          }
+          return true;
+        });
+      };
+
+      // 找到目标节点的位置并插入
+      const newData = removeNode([...prevData]);
+      
+      const insertNode = (nodes: NodeProps[]): boolean => {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === dropId) {
+            const insertIndex = position === 'before' ? i : i + 1;
+            nodes.splice(insertIndex, 0, dragNode!);
+            return true;
+          }
+          if (nodes[i].children.length > 0 && insertNode(nodes[i].children)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      insertNode(newData);
+      return newData;
+    });
+  };
+
+  const FileIcon = () => (
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ marginRight: '4px' }}
+    >
+      <path 
+        d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9L13 2z" 
+        stroke="#FFB800" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        fill="#FFE082"
       />
-      <button 
-        className="custom-filter-button"
-        onClick={() => handleFilter?.(value)}
-      >
-        Search
-      </button>
-    </div>
+      <path 
+        d="M13 2v7h7" 
+        stroke="#FFB800" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 
   return (
-    <div className="App">
-      <h1>Playground</h1>
-      <div className="tree">
-        <Tree 
-          treeData={serachTreeDta ?? treeData} 
-          onDelete={handleDelete}
-          onAdd={handleAdd}
-          onFilter={handleFilter}
-          // topSlot={customTopSlot}  // 使用自定义顶部插槽
-        />
-      </div>
+    <div style={{ padding: '20px' }}>
+      <Tree
+        treeData={serachTreeDta ?? treeData}
+        onDelete={handleDelete}
+        onAdd={handleAdd}
+        onFilter={handleFilter}
+        leftSlot={<FileIcon />}
+        onDragMove={handleDragMove}
+      />
     </div>
   );
 };

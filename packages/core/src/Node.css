@@ -9,6 +9,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px;
+  position: relative;
+}
+
+.node-container:hover {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .node-content {
@@ -20,6 +25,12 @@
 .node-actions {
   display: flex;
   gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.node-container:hover .node-actions {
+  opacity: 1;
 }
 
 .node-actions button {
@@ -63,4 +74,39 @@
 .node-input-container input:focus {
   border-color: #1677ff;
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.node-drag {
+  position: relative;
+}
+
+.node-drag[data-drop-position="before"]::before,
+.node-drag[data-drop-position="after"]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #1677ff;
+  pointer-events: none;
+}
+
+.node-drag[data-drop-position="before"]::before {
+  top: 0;
+}
+
+.node-drag[data-drop-position="after"]::after {
+  bottom: 0;
+}
+
+.node-drag.dragging {
+  opacity: 0.5;
+}
+
+.node-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  position: relative;
 }

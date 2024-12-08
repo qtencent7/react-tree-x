@@ -128,6 +128,12 @@ const App: React.FC = () => {
     <div style={{width: '300px', height: '500px', border: '1px solid #000', overflow: 'auto'}}>
       <Search style={{ marginBottom: 8 }} placeholder="Search" onChange={onChange} />
       <Tree
+        draggable
+        titleRender={(node) => {
+          return (
+            <span>{node.title}</span>
+          )
+        }}
         onExpand={onExpand}
         expandedKeys={expandedKeys}
         autoExpandParent={autoExpandParent}
