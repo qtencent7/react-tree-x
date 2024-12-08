@@ -1,208 +1,162 @@
-import { Tree, TreeNode } from '@react-tree-x/core';
-import { useState } from 'react';
+import { Tree } from '@react-tree-x/core';
+import React, { useState } from 'react';
+import type { NodeProps } from '@react-tree-x/core';
 
-const generateUniqueId = () => Math.random().toString(36).substr(2, 9);
+// Helper function to create nested data for both trees
+const createNestedData = (depth: number, currentDepth: number = 1, parentId: string = '0'): NodeProps[] => {
+  if (currentDepth > depth) return [];
+  
+  return [{
+    id: `${parentId}-${currentDepth}`,
+    label: `Level ${currentDepth}`,
+    children: createNestedData(depth, currentDepth + 1, `${parentId}-${currentDepth}`)
+  }];
+};
 
-const sampleData: TreeNode[] = [
-  {
-    id: '1',
-    label: '第一层节点',
-    children: [
-      {
-        id: '1-1',
-        label: '第二层节点',
-        children: [
-          {
-            id: '1-1-1',
-            label: '第三层节点',
-            children: [
-              {
-                id: '1-1-1-1',
-                label: '第四层节点',
-                children: [
-                  {
-                    id: '1-1-1-1-1',
-                    label: '第五层节点',
-                    children: [
-                      {
-                        id: '1-1-1-1-1-1',
-                        label: '第六层节点',
-                        children: [
-                          {
-                            id: '1-1-1-1-1-1-1',
-                            label: '第七层节点',
-                            children: [
-                              {
-                                id: '1-1-1-1-1-1-1-1',
-                                label: '第八层节点',
-                                children: [
-                                  {
-                                    id: '1-1-1-1-1-1-1-1-1',
-                                    label: '第九层节点',
-                                    children: [
-                                      {
-                                        id: '1-1-1-1-1-1-1-1-1-1',
-                                        label: '最后一个节点'
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: '1-2',
-        label: '第二层节点(分支)',
-        children: [
-          {
-            id: '1-2-1',
-            label: '第三层节点A',
-            children: [
-              { id: '1-2-1-1', label: '第四层节点A' },
-              { id: '1-2-1-2', label: '第四层节点B' }
-            ]
-          },
-          {
-            id: '1-2-2',
-            label: '第三层节点B',
-            children: [
-              { id: '1-2-2-1', label: '第四层节点C' },
-              { id: '1-2-2-2', label: '第四层节点D' }
-            ]
-          }
-        ]
+const App: React.FC = () => {
+  const [originalTreeData] = useState<NodeProps[]>(createNestedData(15));
+  const [treeData, setTreeData] = useState<NodeProps[]>(originalTreeData);
+  const [serachTreeDta, setSearchTreeData] = useState<NodeProps[]>();
+
+  // 递归查找并删除节点
+  const deleteNode = (data: NodeProps[], targetId: string): NodeProps[] => {
+    return data.filter(node => {
+      if (node.id === targetId) {
+        return false; // 删除匹配的节点
       }
-    ]
-  },
-  {
-    id: '2',
-    label: '平行节点',
-    children: [
-      {
-        id: '2-1',
-        label: '子节点1',
-        children: [
-          { id: '2-1-1', label: '子节点1-1' },
-          { id: '2-1-2', label: '子节点1-2' }
-        ]
-      },
-      {
-        id: '2-2',
-        label: '子节点2',
-        children: [
-          { id: '2-2-1', label: '子节点2-1' },
-          { id: '2-2-2', label: '子节点2-2' }
-        ]
+      if (node.children.length > 0) {
+        node.children = deleteNode(node.children, targetId);
       }
-    ]
-  }
-];
-
-function App() {
-  const [treeData, setTreeData] = useState<TreeNode[]>(sampleData);
-  const [selectedId, setSelectedId] = useState<string | number>();
-
-  const handleAddNode = (parentId: string | number, label: string) => {
-    const newNodeId = generateUniqueId();
-    const findNodePathAndAddNode = (nodes: TreeNode[], targetId: string | number, currentPath: string[] = []): { updatedNodes: TreeNode[], path: string[] } => {
-      return {
-        updatedNodes: nodes.map(node => {
-          const newPath = [...currentPath, node.id.toString()];
-          
-          if (node.id === targetId) {
-            const newNode: TreeNode = {
-              id: newNodeId,
-              label: label
-            };
-            
-            return {
-              ...node,
-              children: [
-                ...(node.children || []),
-                newNode
-              ]
-            };
-          }
-          
-          if (node.children) {
-            const { updatedNodes: updatedChildren, path: childPath } = findNodePathAndAddNode(node.children, targetId, newPath);
-            
-            return {
-              ...node,
-              children: updatedChildren
-            };
-          }
-          
-          return node;
-        }),
-        path: nodes.some(node => node.id === targetId) 
-          ? [...currentPath, targetId.toString(), newNodeId] 
-          : []
-      };
-    };
-
-    const { updatedNodes, path } = findNodePathAndAddNode(treeData, parentId);
-    
-    setTreeData(updatedNodes);
-    return path;
+      return true;
+    });
   };
 
-  const handleDeleteNode = (nodeId: string | number) => {
-    const findNodePathAndDeleteNode = (nodes: TreeNode[], targetId: string | number, currentPath: string[] = []): { updatedNodes: TreeNode[], path: string[] } => {
-      return {
-        updatedNodes: nodes.filter(node => {
-          const newPath = [...currentPath, node.id.toString()];
-          
-          // 如果是要删除的节点，返回 false 以过滤掉
-          if (node.id === targetId) {
-            return false;
-          }
-          
-          // 如果有子节点，递归处理子节点
-          if (node.children) {
-            const { updatedNodes: updatedChildren, path: childPath } = findNodePathAndDeleteNode(node.children, targetId, newPath);
-            node.children = updatedChildren;
-          }
-          
-          return true;
-        }),
-        path: nodes.some(node => node.id === targetId) 
-          ? currentPath 
-          : []
-      };
-    };
-
-    const { updatedNodes, path } = findNodePathAndDeleteNode(treeData, nodeId);
-    
-    setTreeData(updatedNodes);
-    return path;
+  const handleDelete = (id: string) => {
+    setTreeData(prevData => deleteNode(prevData, id));
   };
+
+  const generateUniqueId = (parentId: string): string => {
+    // 使用时间戳确保唯一性
+    const timestamp = new Date().getTime();
+    return `${parentId}-${timestamp}`;
+  };
+
+  // 递归查找并添加子节点
+  const addChildNode = (data: NodeProps[], targetId: string, newNodeLabel: string): NodeProps[] => {
+    return data.map(node => {
+      if (node.id === targetId) {
+        // 创建新的子节点
+        const newId = generateUniqueId(node.id);
+        return {
+          ...node,
+          children: [
+            ...node.children,
+            {
+              id: newId,
+              label: newNodeLabel,
+              children: []
+            }
+          ]
+        };
+      }
+      if (node.children.length > 0) {
+        return {
+          ...node,
+          children: addChildNode(node.children, targetId, newNodeLabel)
+        };
+      }
+      return node;
+    });
+  };
+
+  const handleAdd = (parentId: string, label: string) => {
+    setTreeData(prevData => addChildNode(prevData, parentId, label));
+  };
+
+  // 检查节点或其子节点是否包含过滤文本
+  const nodeMatchesFilter = (node: NodeProps, filterText: string): boolean => {
+    // 检查当前节点的label是否包含过滤文本
+    if (node.label.toLowerCase().includes(filterText.toLowerCase())) {
+      return true;
+    }
+    // 递归检查子节点
+    return node.children.some(child => nodeMatchesFilter(child, filterText));
+  };
+
+  // 过滤树结构，保留匹配的节点及其父节点
+  const filterTree = (nodes: NodeProps[], filterText: string): NodeProps[] => {
+    if (!filterText) {
+      return originalTreeData; // 如果没有过滤文本，返回原始树
+    }
+
+    return nodes
+      .map(node => {
+        // 检查当前节点及其子节点是否匹配
+        const hasMatch = nodeMatchesFilter(node, filterText);
+        
+        if (!hasMatch) {
+          return null; // 如果没有匹配，返回null（后面会被filter过滤掉）
+        }
+
+        // 如果有匹配，递归过滤子节点
+        const filteredChildren = filterTree(node.children, filterText);
+        
+        // 返回包含过滤后子节点的新节点
+        return {
+          ...node,
+          children: filteredChildren
+        };
+      })
+      .filter(Boolean) as NodeProps[]; // 过滤掉null值
+  };
+
+  const handleFilter = (filterText: string) => {
+    const filteredData = filterTree(treeData, filterText);
+    setSearchTreeData(filteredData);
+  };
+
+  // 示例：自定义顶部插槽
+  const customTopSlot = ({
+    value,
+    onChange,
+    onKeyDown
+  }: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  }) => (
+    <div className="custom-filter">
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        placeholder="Search..."
+        className="custom-filter-input"
+      />
+      <button 
+        className="custom-filter-button"
+        onClick={() => handleFilter?.(value)}
+      >
+        Search
+      </button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto px-4" style={{ width: '300px', height: '500px' }}>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">React Tree X Demo</h1>
-        <p className="text-gray-600 mb-6">一个现代的 React 树形组件示例</p>
+    <div className="App">
+      <h1>Playground</h1>
+      <div className="tree">
         <Tree 
-          data={treeData} 
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onAddNode={handleAddNode}
-          onDeleteNode={handleDeleteNode}
+          treeData={serachTreeDta ?? treeData} 
+          onDelete={handleDelete}
+          onAdd={handleAdd}
+          onFilter={handleFilter}
+          // topSlot={customTopSlot}  // 使用自定义顶部插槽
         />
       </div>
     </div>
   );
-}
+};
 
 export default App;

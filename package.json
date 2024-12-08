@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter ./packages/playground dev",
-    "build": "pnpm --filter ./packages/* build"
+    "build": "pnpm --filter ./packages/* build",
+    "compare": "pnpm --filter ./packages/compare dev"
   }
 }

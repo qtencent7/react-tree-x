@@ -1,3 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+.App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.App h1 {
+  margin-bottom: 20px;
+}
+
+.tree {
+  width: 300px;
+  height: 500px;
+  margin: 0 auto;
+}
