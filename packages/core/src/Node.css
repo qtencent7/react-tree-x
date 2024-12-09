@@ -1,7 +1,15 @@
 .node-wrapper {
+  --tree-color: #1677ff;
+  --tree-line-width: 2px;
+  --tree-indent: 20px;
   display: flex;
   flex-direction: column;
-  margin-left: 20px;
+  /* margin-left: var(--tree-indent); */
+  position: relative;
+}
+
+.node-wrapper:not(:last-child) {
+  border-left: var(--tree-line-width) solid #075985;
 }
 
 .node-container {
@@ -11,6 +19,16 @@
   padding: 8px;
   position: relative;
 }
+
+/* .node-container::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--tree-indent) * -1);
+  top: 50%;
+  width: var(--tree-indent);
+  height: var(--tree-line-width);
+  background-color: var(--tree-color);
+} */
 
 .node-container:hover {
   background-color: rgba(0, 0, 0, 0.02);
@@ -76,37 +94,43 @@
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
 }
 
-.node-drag {
+.node-wrapper {
+  --tree-clr: #075985;
+  --tree-font-size: 16px;
+  --tree-item-height: 2;
+  --tree-offset: 20px;
+  --tree-thickness: 2px;
+  --tree-style: solid;
   position: relative;
+  padding-inline-start: var(--tree-offset);
 }
 
-.node-drag[data-drop-position="before"]::before,
-.node-drag[data-drop-position="after"]::after {
+.node-wrapper:not(:last-child) {
+  border-left: var(--tree-thickness) solid var(--tree-clr);
+  border-left-width: var(--tree-thickness);
+  margin-left: calc(var(--tree-thickness) * -1);
+}
+
+.node-wrapper::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #1677ff;
-  pointer-events: none;
+  top: -14px;
+  left: -2px;
+  width: var(--tree-offset);
+  height: var(--tree-thickness);
+  /* background-color: var(--tree-clr); */
+  border-left: var(--tree-thickness) var(--tree-style) var(--tree-clr);
+  border-bottom: var(--tree-thickness) var(--tree-style) var(--tree-clr);
+  height: calc(var(--tree-item-height)  * var(--tree-font-size));
 }
 
-.node-drag[data-drop-position="before"]::before {
-  top: 0;
-}
-
-.node-drag[data-drop-position="after"]::after {
-  bottom: 0;
-}
-
-.node-drag.dragging {
-  opacity: 0.5;
-}
-
-.node-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
-  position: relative;
+.node-wrapper::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--tree-clr);
+  top: 16px;
+  left: calc(var(--tree-offset) - 4px);
 }
